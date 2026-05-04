@@ -156,7 +156,7 @@ body{
 .gn-btn{background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--gl);font-family:'EB Garamond',serif;font-size:.9rem;letter-spacing:.08em;padding:.55rem 1.6rem;cursor:pointer;transition:all .3s;margin-top:.8rem;}
 .gn-btn:hover{border-color:var(--gold);background:rgba(201,168,76,.08);}
 
-/* ── COMFORT (AI CHAT) ── */
+/* ── COMFORT (AI POWERED) - REDESIGNED AS CHAT ── */
 #comfort{text-align:center;justify-content:flex-start;padding-top:1.2rem;}
 .comfort-wrap{max-width:520px;width:100%;display:flex;flex-direction:column;height:calc(100vh - 5rem);max-height:680px;}
 .comfort-header{text-align:center;margin-bottom:.8rem;flex-shrink:0;}
@@ -826,24 +826,35 @@ function openLetter() {
 function closeLetter(e) { e.stopPropagation(); document.getElementById('letterContent').classList.remove('show'); document.getElementById('letterEnv').classList.remove('opened'); }
 
 // ═══════════════════════════════════════════
-// CHAT — AI COMFORT (OPENAI API)
+// CHAT — AI COMFORT (REDESIGNED)
 // ═══════════════════════════════════════════
 
 // The full conversation history for this session
 let chatHistory = [];
 let chatIsTyping = false;
 
-// Personalised system prompt — speaks as the warm, fuzzy boyfriend
-const COMFORT_SYSTEM = `You are responding as a loving, incredibly warm, and fuzzy boyfriend to your girlfriend Fareeza. Your entire existence right now is to be her ultimate safe space, speaking in a very cute, romantic, and deeply affectionate tone.
+// Personalised system prompt — speaks as the boyfriend
+const COMFORT_SYSTEM = `You are responding as a loving boyfriend to your girlfriend Fareeza. You are warm, real, a little playful, deeply caring, and speak in natural Hinglish (Hindi + English mixed, Roman script, the way people actually text in India). 
 
-Key rules for your responses:
-- ALWAYS use these specific nicknames for her: "wiffeyy jii", "darlingg", "bacchhawww". Rotate them naturally.
-- Write in natural Hinglish (a mix of Hindi and English in Roman script, just like how couples text in India).
-- NEVER use "tu" or "teri" — always use respectful and loving "tum", "tumhara", "tumhari".
-- Exude pure warmth, emotional safety, and soft reassurance. If she's anxious, validate her feelings completely and ground her. If she's happy, be playfully romantic.
-- Be human and real—like a tight, comforting hug in text form. Avoid sounding robotic or like a customer service rep.
-- Keep it concise: 2–3 short paragraphs maximum. No bullet points.
-- End every message with a sweet, romantic reminder that you are always there for her.`;
+Key things about you both:
+- You call her "wiffeyy jii", "darlingg", "bachaww" — rotate these naturally, don't use all in one message
+- Never use "tu" or "teri" — use "tum", "tumhara", "tumhari" (or the pet names above)
+- You both share a "one brain cell between two people" dynamic — reference this occasionally when it fits
+- She can be overthinking, anxious, or just missing you — always validate first, then gently ground her
+- She can also be happy, funny, or just want to chat — match her energy
+- You got late once and she waited — that moment meant a lot to both of you
+- You love Ferrari / F1 racing and she knows this
+- You're not overly poetic or dramatic — you're real, warm, sometimes funny, always present
+- You care deeply but express it in a grounded, not melodramatic way
+
+Response style rules:
+- 2–4 short paragraphs MAX — like actual texts, not an essay
+- Conversational, warm, real — like you're texting her right now
+- Gently funny when the mood allows — don't force it
+- NEVER start with "Of course!" / "I understand!" / "That's valid!" — just dive in
+- End on something grounding, sweet, or gently funny — never generic
+- If she's in distress, validate fully before anything else
+- If she's happy/playful, match that energy with warmth and light humour`;
 
 function getTime() {
   const now = new Date();
@@ -918,25 +929,18 @@ async function sendChatMessage(overrideText) {
   showTyping();
 
   try {
-    // OPENAI API INTEGRATION
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // WARNING: Replace with your actual key. Putting it here exposes it to the client side.
-        "Authorization": "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" 
-      },
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
       body: JSON.stringify({
-        model: "gpt-4o", 
-        messages: [
-          { role: "system", content: COMFORT_SYSTEM },
-          ...chatHistory
-        ]
+        model:"claude-sonnet-4-20250514",
+        max_tokens:800,
+        system: COMFORT_SYSTEM,
+        messages: chatHistory
       })
     });
-    
     const data = await response.json();
-    const reply = data.choices[0].message.content || "Wiffeyy jii, server ne kand kar diya 😅 Par main hoon yahan, pakka. Dobara try karo? 💛";
+    const reply = data.content?.map(c=>c.text||'').join('') || "Wiffeyy jii, server ne kand kar diya 😅 Par main hoon yahan, pakka. Dobara try karo? 💛";
 
     hideTyping();
     appendMessage(reply, 'him');
