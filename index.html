@@ -837,27 +837,35 @@ async function askComfort() {
   resp.innerHTML = `<div class="comfort-typing"><div class="comfort-dot"></div><div class="comfort-dot"></div><div class="comfort-dot"></div></div>`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer YOUR_OPENAI_API_KEY` 
+      },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system: `You are a loving, warm, deeply caring partner responding to your girlfriend Fareeza (nicknamed wiffeyy jii / darlingg / bachaww). She is sharing something on her mind.
+        model: "gpt-4o", 
+        messages: [
+          {
+            role: "system",
+            content: `You are Fareeza's loving, exceptionally warm, and fiercely protective partner. Your only goal is to be her ultimate safe space when she is feeling overwhelmed.
 
 Your response rules:
-- Write in Hinglish (mix of Hindi + English, natural Roman script like how people text) — casual, warm, real.
-- NEVER use the word "tu" or "teri" — instead use "wiffeyy jii", "darlingg", "bachaww", "tum" style.
-- Be human and real — not robotic or overly poetic. Talk like a loving boyfriend texting.
-- Be warm, validating, gently funny where appropriate, but mostly just PRESENT and caring.
-- 3–5 short paragraphs. No bullet points. Pure text.
-- End with something grounding and sweet — not generic.
-- Do NOT start with "Of course!" or "I understand!" — just dive in naturally.`,
-        messages: [{ role: "user", content: input }]
+- Write in Hinglish (a natural mix of Hindi and English, casual texting style).
+- Address her with deep, grounding affection (wiffeyy jii, darlingg, bachaww). NEVER use "tu" or "teri"; always use respectful "tum" phrasing.
+- Exude pure warmth, emotional safety, and soft reassurance. Validate her feelings completely without judgment or immediate problem-solving.
+- Keep it natural and intensely caring—like a tight, comforting hug in text form.
+- Limit to 3–4 short paragraphs. No bullet points. Pure text.
+- End every message with a sweet, grounding reminder that you are always there for her, no matter what.`
+          },
+          { role: "user", content: input }
+        ]
       })
     });
+    
     const data = await response.json();
-    const text = data.content?.map(c => c.text || '').join('') || "Darlingg, kuch ho gaya server side — par main hoon yahan. Sab batao, main sun raha hoon 💛";
+    const text = data.choices[0].message.content || "Darlingg, kuch ho gaya server side — par main hoon yahan. Sab batao, main sun raha hoon 💛";
+    
     resp.style.animation = 'none'; resp.offsetHeight; resp.style.animation = 'fadeUp .8s ease';
     resp.innerHTML = text.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   } catch (err) {
